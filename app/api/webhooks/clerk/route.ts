@@ -8,22 +8,22 @@ import { Webhook } from "svix";
 import { createUser, deleteUser, updateUser } from "@/lib/actions/user.actions";
 
 export async function POST(req: Request) {
-  const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+  const SIGNING_SECRET = process.env.SIGNING_SECRET;
 
-  if (!WEBHOOK_SECRET) {
+  if (!SIGNING_SECRET) {
     throw new Error(
-      "Please add WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local"
+      "Please add SIGNING_SECRET from Clerk Dashboard to .env or .env.local"
     );
   }
 
   // Get headers
-  const headerPayload = await headers()
-  const svix_id = headerPayload.get('svix-id')
-  const svix_timestamp = headerPayload.get('svix-timestamp')
-  const svix_signature = headerPayload.get('svix-signature')
+  const headerPayload = await headers();
+  const svix_id = headerPayload.get("svix-id");
+  const svix_timestamp = headerPayload.get("svix-timestamp");
+  const svix_signature = headerPayload.get("svix-signature");
 
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response("Error occurred -- no svix headers", {
+    return new Response("Error: Missing Svix headers", {
       status: 400,
     });
   }
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
   const payload = await req.json();
   const body = JSON.stringify(payload);
 
-  const wh = new Webhook(WEBHOOK_SECRET);
+  const wh = new Webhook(SIGNING_SECRET);
 
   let evt: WebhookEvent;
 
@@ -42,8 +42,8 @@ export async function POST(req: Request) {
       "svix-signature": svix_signature,
     }) as WebhookEvent;
   } catch (err) {
-    console.error("Error verifying webhook:", err);
-    return new Response("Error occurred", {
+    console.error("Error: Could not verify webhook:", err);
+    return new Response("Error: Verification error", {
       status: 400,
     });
   }
@@ -53,10 +53,10 @@ export async function POST(req: Request) {
 
   try {
     if (eventType === "user.created") {
-      const { id, email_addresses, image_url, first_name, last_name, username } = evt.data;
+      const { email_addresses, image_url, first_name, last_name, username } = evt.data;
 
       const user = {
-        clerkId: id,
+        clerkId: id ?? "",
         email: email_addresses[0].email_address,
         username: username!,
         firstName: first_name ?? "", // Provide default value if null
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
       const newUser = await createUser(user);
 
       if (newUser) {
-        await clerkClient.users.updateUserMetadata(id, {
+        await clerkClient.users.updateUserMetadata(id as string, {
           publicMetadata: {
             userId: newUser._id,
           },
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     }
 
     if (eventType === "user.updated") {
-      const { id, image_url, first_name, last_name, username } = evt.data;
+      const { image_url, first_name, last_name, username } = evt.data;
 
       const user = {
         firstName: first_name ?? "", // Provide default value if null
@@ -87,15 +87,13 @@ export async function POST(req: Request) {
         photo: image_url,
       };
 
-      const updatedUser = await updateUser(id, user);
+      const updatedUser = await updateUser(id ?? "", user);
 
       return NextResponse.json({ message: "OK", user: updatedUser });
     }
 
     if (eventType === "user.deleted") {
-      const { id } = evt.data;
-
-      const deletedUser = await deleteUser(id!);
+      const deletedUser = await deleteUser(id ?? "");
 
       return NextResponse.json({ message: "OK", user: deletedUser });
     }
@@ -103,7 +101,7 @@ export async function POST(req: Request) {
     console.log(`Webhook with an ID of ${id} and type of ${eventType}`);
     console.log("Webhook body:", body);
 
-    return new Response("", { status: 200 });
+    return new Response("Webhook received", { status: 200 });
   } catch (error) {
     console.error("Error processing webhook:", error);
     return new Response("Error processing webhook", {
