@@ -9,7 +9,6 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
-import { User } from "lucide-react"
 import { navLinks } from "@/constants"
 import { usePathname } from "next/navigation"
 import { Button } from "../ui/button"
