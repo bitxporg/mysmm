@@ -5,16 +5,31 @@ import { getUserById } from '@/lib/actions/user.actions';
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 
+type TransformationTypeKey = keyof typeof transformationTypes;
+
+interface SearchParamProps {
+  params: {
+    type: TransformationTypeKey;
+  };
+}
+
 const AddTransformationTypePage = async ({ params }: SearchParamProps) => {
-  // Awaiting params if it's async (although it should be synchronous by Next.js convention)
+  // Destructuring the type from params
   const { type } = params; 
+  
+  // Getting the userId from the auth function
   const { userId } = await auth();
+  
+  // Getting the transformation object based on the type
   const transformation = transformationTypes[type];
 
+  // Redirecting to sign-in page if userId is not available
   if (!userId) redirect('/sign-in');
 
+  // Fetching the user details based on userId
   const user = await getUserById(userId);
 
+  // Returning the JSX for the page
   return (
     <>
       <Header title={transformation.title} subtitle={transformation.subTitle} />
