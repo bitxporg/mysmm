@@ -29,7 +29,7 @@ export default function RootLayout({
     }}
         >
     <html lang="en">
-      <body
+      <body 
         className={cn("font-IBMPlex antialiased", IBMPlex.variable)}
         suppressHydrationWarning={true}
       >
