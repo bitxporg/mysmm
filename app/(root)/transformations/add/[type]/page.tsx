@@ -5,18 +5,17 @@ import { getUserById } from '@/lib/actions/user.actions';
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 
-type TransformationTypeKey = keyof typeof transformationTypes;
+declare type TransformationTypeKey = "restore" | "removeBackground" | "fill" | "remove" | "recolor";
 
-interface SearchParamProps {
-  params: {
-    type: TransformationTypeKey;
-  };
-}
+declare type SearchParamProps = {
+    params: { id: string; type: TransformationTypeKey };
+    searchParams: { [key: string]: string | string[] | undefined };
+};
 
-const AddTransformationTypePage = async ({ params }: SearchParamProps) => {
-  // Destructuring the type from params
-  const { type } = params; 
-  
+const AddTransformationTypePage = async ({ params, searchParams }: SearchParamProps) => {
+  // Extracting id and type from params
+  const { id, type } = params;
+
   // Getting the userId from the auth function
   const { userId } = await auth();
   
