@@ -14,7 +14,7 @@ type SearchParamProps = {
 };
 
 const AddTransformationTypePage = async ({ params }: SearchParamProps) => {
-  const { type } = params;
+  const { type } = await Promise.resolve(params);
   const { userId } = await auth();
   const transformation = transformationTypes[type];
 
