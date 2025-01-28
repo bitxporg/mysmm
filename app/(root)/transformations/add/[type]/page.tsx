@@ -5,16 +5,9 @@ import { getUserById } from '@/lib/actions/user.actions';
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 
-type TransformationTypeKey = keyof typeof transformationTypes;
-
-type SearchParamProps = {
-  params: {
-    type: TransformationTypeKey;
-  };
-};
-
 const AddTransformationTypePage = async ({ params }: SearchParamProps) => {
-  const { type } = await Promise.resolve(params);
+  // Awaiting params if it's async (although it should be synchronous by Next.js convention)
+  const { type } = params; 
   const { userId } = await auth();
   const transformation = transformationTypes[type];
 
